@@ -332,8 +332,8 @@ contract sendToFallback{
         require(sent,"failed to send Ether");
     }
 }
-
-contract receiver{
+//call function
+contract Receiver{
     event Received(address caller, uint amount, string message);
 
     fallback() external payable {
@@ -345,7 +345,6 @@ contract receiver{
         return _x +1;
     }
 }
-
 
 contract caller{
     event Response(bool success, bytes data);
@@ -360,7 +359,94 @@ contract caller{
 
         emit Response(success,data);
     }
+
+    //calling a function that does not exist triggers the fallback function 
+    function testCallDoesNotExist(address payable _addr)public payable{
+        (bool success, bytes memory data) = _addr.call{value: msg.value}(
+            abi.encodeWithSignature("doesNotExist()")
+        );
+        emit Response(success,data);
+        )
+    }
 }
+//delegatecall is a low-level Solidity function that allows a contract to execute code from another contract while maintaining the context of the calling contract. It is often used in advanced smart contract development scenarios such as proxy contracts, upgradable contracts, and libraries.
+
+
+//delegate call
+contract B{
+    //storage layout must be same as contract A
+    uint public num;
+    address payable sender;
+    uint public value;
+
+    function setVars(uint _num) public payable{
+        num = _num;
+        sender = msg.sender;
+        value = msg.value;
+    }
+}
+
+
+contract A{
+    uint public num;
+    address payable sendder;
+    uint public value;
+
+    function serVars(address _contract, uint _num)public payable{
+        //A storage is set , B is not modified
+        (bool success, bytes memory data) = _contract.delegatecall(
+            abi.encodeWithSignature("setVars(uint256)", _num);
+        )
+    }
+}
+
+//calling other contracts
+contract Callee{
+    uint public x;
+    uint public value;
+
+    function setX(uint _x) public returns(uint){
+        x= _x;
+        return x;
+    }
+
+    function setXandSendEther(uint _x)public payable returns(uint,uint){
+        x=_x;
+        value = msg.sender;
+        return (x,value);
+    }
+
+}
+
+contract Caller{
+    function setX(Callee _callee, uint _x)public {
+        uint x = _callee.setX(_x);
+
+    }
+    function setXFromAddress(address _addr, uint _x)public  {
+        Callee callee = Callee(_addr) ;
+        callee.setX(_x);
+    }
+
+    function setXandSendEther(Callee _callee, uint _x)public payable{
+        (uint x, uint value) = _callee.setXandSendEther{value: msg.value}(_x);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
