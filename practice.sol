@@ -165,3 +165,110 @@ contract B is A{
     }
 }
 
+//interface 
+//to interact between two contracts in sol
+contract base{
+    uint public count;
+    function increment()external{
+        count += 1;
+    }
+}
+
+interface ICounter{
+    function count() external view returns(uint);
+    function increment() external;
+}
+
+contract myContract{
+    function incrementCounter(address _counter) external{
+        ICounter(_counter).increment();
+    }
+
+    function getCount(address _counter) external view returns(uint){
+            return ICounter(_counter).count();
+    }
+}
+
+//uniswap examples
+
+interface UniswapV2Factory{
+    function getPair(address tokenA, address tokenB)
+    external view returns(address pair);
+}
+interface UniswapV2Pair{
+    function getReserves()
+    external view returns(
+        uint112 reserve0;
+        uint112 reserve1;
+        uint32 blockTimestampLast;
+    )
+}
+
+contract UniswapExample{
+    address private factory = 0xh32j5h235jkl1k512ljk41jk24;
+    address private dai = 0xh32j5h235jkl1k512ljjfjabnjk35h;
+    address private weth = 0xh32j5h235jkl1k512l52j3h55413j;
+
+    function getTokenReserves() external view returns(uint,uint){
+        address pair = UniswapV2FAactory(factory).getPair(dai,weth);
+        (uint reserve0, uint reserve1) = UniswapV2Pair(pair).getReserves();
+        return (reserve0, reserve1);
+    }
+}
+
+//payable --> makes contract able to receive ether
+//payable address can receive ether
+
+contract Payable{
+    address public payable owner;
+    //payable constructor can also recieve ether
+    constructor payable(){
+        owner = payable(msg.sender);
+    }
+    //func to deposit ether into this contract
+    //call the function along with some ether
+    //the balance of this contract will be automatically updated;
+    function deposit(address _addr) public payable{
+
+    }
+    //non payable func
+    function notPayable() public{}
+
+    //func to withdraw all ether from this contract 
+    function withdraw() public {
+        uint amount = address(this).balance;
+        //send all ether to owner 
+        //owner can receive ether since the address of owner is payable
+
+        (bool success,) = owner.call{value: amount}("");
+        require(success, "Failed to send ether");
+    }
+    //function to transfer ether from this contract to address from input
+    function transfer(address payable _to, uint _amount) public {
+        (bool success, ) = owner.call{value: _amount}("");
+        require(success, "failed to send ether");
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
