@@ -251,10 +251,87 @@ contract Payable{
 
 }
 
+//ether transfering methods
+//transfer(2300 gas, throws error)
+// send(2300 gas, returns bool)
+//call (forward all gas or set gas, returns bool)
+
+contract RecieveEther{
+    /*
+    which function is called ,fallback()  or receive()
+
+                    send Ether
+                         |
+                 msg.data is empty?
+                        /   \
+                       yes   no
+                     /         \
+        receive() exists?      fallback()  
 
 
+    */
 
+    //function to receive ether msg.data must be emoty
 
+    receive() external payable{}
+    //fallback func is called when msg.data is not empty
+    function getBalace()public view returns(uint){
+        return address(this).balance;
+    }
+}
+contract sendEther{
+    function sendViaTransfer(address payable _to) public payable {
+        //this is no longer recommended
+        _to.transfer(mgs.value);
+    }
+
+    function sendViaSend(address payable _to) public payable{
+       
+        //this func returns a bool value indicating success or failure
+        //this is also not recommended
+       bool sent = _to.send(msg.value);
+       require(sent,"Filed to send ether);
+    }
+
+    function sendViaCall(address payable _to) public payable{
+        //call returns a bool value indicating success or failure
+        //this is recommended
+        (bool sent, bytes memory data) = _to.call{value: msg.value}("");
+        require(sent, "Failed to send ether");
+    }
+}
+
+//fallback
+
+contract fallback{
+    event log(string func, uint gas);
+
+    //fallback func must be declared as external
+    fallback() external payable{
+        //send / transfer (forward 2300 gas to this fallback function)
+        //call (forwards all the gas)
+        emit log("fallback", gasleft());
+    }
+    //receive is a variant of fallback which is triggered when the msg.data is empty
+
+    receive() external payable{
+        emit log("receive", gasleft());
+    }
+    //helper func to check the baclance of this contract 
+    function getBalance() public view returns(uint){
+        return address(this).balance;
+    }
+
+}
+contract sendToFallback{
+    function transferToFallback(address payable _to) public payable {
+        _to.transfer(msg.value);
+    }
+    function callFallback(address payable _to)public payable{
+        (bool sent,) = _to.call{value: msg.value}("");
+        require(sent,"failed to send Ether");
+    }
+}
 
 
 
